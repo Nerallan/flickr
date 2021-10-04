@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CE17E90D270AE4130005E810 /* FlickrApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE17E90C270AE4130005E810 /* FlickrApi.swift */; };
+		CE17E91C270B49110005E810 /* OauthHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE17E91B270B49110005E810 /* OauthHelper.swift */; };
+		CE17E92F270B505A0005E810 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE17E92E270B505A0005E810 /* ExternalAccessory.framework */; };
+		CE341E4A2705E6F20058624D /* FlickrService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE341E492705E6F20058624D /* FlickrService.swift */; };
 		CEE0441927058D57007A0D1F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE0441827058D57007A0D1F /* AppDelegate.swift */; };
 		CEE0441B27058D57007A0D1F /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE0441A27058D57007A0D1F /* SceneDelegate.swift */; };
 		CEE0441D27058D57007A0D1F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE0441C27058D57007A0D1F /* ViewController.swift */; };
@@ -35,6 +39,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CE17E90C270AE4130005E810 /* FlickrApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickrApi.swift; sourceTree = "<group>"; };
+		CE17E91B270B49110005E810 /* OauthHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OauthHelper.swift; sourceTree = "<group>"; };
+		CE17E92C270B505A0005E810 /* flickrRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = flickrRelease.entitlements; sourceTree = "<group>"; };
+		CE17E92E270B505A0005E810 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		CE17E933270B50620005E810 /* flickr.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = flickr.entitlements; sourceTree = "<group>"; };
+		CE341E492705E6F20058624D /* FlickrService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickrService.swift; sourceTree = "<group>"; };
 		CEE0441527058D57007A0D1F /* flickr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = flickr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEE0441827058D57007A0D1F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CEE0441A27058D57007A0D1F /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -56,6 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE17E92F270B505A0005E810 /* ExternalAccessory.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,6 +87,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CE17E92D270B505A0005E810 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CE17E92E270B505A0005E810 /* ExternalAccessory.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		CEE0440C27058D57007A0D1F = {
 			isa = PBXGroup;
 			children = (
@@ -83,6 +102,7 @@
 				CEE0442E27058D58007A0D1F /* flickrTests */,
 				CEE0443927058D58007A0D1F /* flickrUITests */,
 				CEE0441627058D57007A0D1F /* Products */,
+				CE17E92D270B505A0005E810 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -99,6 +119,8 @@
 		CEE0441727058D57007A0D1F /* flickr */ = {
 			isa = PBXGroup;
 			children = (
+				CE17E933270B50620005E810 /* flickr.entitlements */,
+				CE17E92C270B505A0005E810 /* flickrRelease.entitlements */,
 				CEE0441827058D57007A0D1F /* AppDelegate.swift */,
 				CEE0441A27058D57007A0D1F /* SceneDelegate.swift */,
 				CEE0441C27058D57007A0D1F /* ViewController.swift */,
@@ -106,6 +128,9 @@
 				CEE0442127058D57007A0D1F /* Assets.xcassets */,
 				CEE0442327058D57007A0D1F /* LaunchScreen.storyboard */,
 				CEE0442627058D57007A0D1F /* Info.plist */,
+				CE341E492705E6F20058624D /* FlickrService.swift */,
+				CE17E91B270B49110005E810 /* OauthHelper.swift */,
+				CE17E90C270AE4130005E810 /* FlickrApi.swift */,
 			);
 			path = flickr;
 			sourceTree = "<group>";
@@ -260,7 +285,10 @@
 			files = (
 				CEE0441D27058D57007A0D1F /* ViewController.swift in Sources */,
 				CEE0441927058D57007A0D1F /* AppDelegate.swift in Sources */,
+				CE341E4A2705E6F20058624D /* FlickrService.swift in Sources */,
+				CE17E91C270B49110005E810 /* OauthHelper.swift in Sources */,
 				CEE0441B27058D57007A0D1F /* SceneDelegate.swift in Sources */,
+				CE17E90D270AE4130005E810 /* FlickrApi.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -436,6 +464,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = flickr/flickr.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = FUX2YQ4UF8;
 				INFOPLIST_FILE = flickr/Info.plist;
@@ -445,6 +475,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = by.nerallan.flickr;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -455,6 +486,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = flickr/flickrRelease.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = FUX2YQ4UF8;
 				INFOPLIST_FILE = flickr/Info.plist;
@@ -527,6 +559,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = by.nerallan.flickrUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = flickr;
@@ -547,6 +580,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = by.nerallan.flickrUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = flickr;
