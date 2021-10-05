@@ -6,6 +6,7 @@
 //
 
 import Foundation;
+import SafariServices
 
 class FlickrService {
     
@@ -129,7 +130,7 @@ class FlickrService {
         return params
     }
     
-    func getRequestToken() {
+    private func getRequestToken(_ complete: @escaping(RequestOAuthTokenResponse) -> Unit) {
         
         let helper = OauthHelper()
         // вычисляется
@@ -142,37 +143,112 @@ class FlickrService {
         let task = sessing.dataTask(with: request) { data, response, error in
             guard let data = data else { return }
             guard let dataString = String(data: data, encoding: .utf8) else { return }
-            // dataString should return: oauth_token=XXXX&oauth_token_secret=YYYY&oauth_callback_confirmed=true
-            let attributes = dataString.urlQueryStringParameters
+            // dataString should be as follows: oauth_token=XXXX&oauth_token_secret=YYYY&oauth_callback_confirmed=true
+            let attributes = dataString.urlQueryParameters
             let result = RequestOAuthTokenResponse(oauthToken: attributes["oauth_token"] ?? "",
                                                    oauthTokenSecret: attributes["oauth_token_secret"] ?? "",
                                                    oauthCallbackConfirmed: attributes["oauth_callback_confirmed"] ?? "")
             
             print("=======================")
             print("RESULT \(result)")
-//            if let data = data {
-//                print("DATA")
-//                print(data)
-//                completion(.success(data))
-//                print("RESPONCE")
-//                print(response!)
-//            } else if let error = error {
-//
-//                completion(.failure(error))
-//            } else {
-////                completion(.failure(ServerError.internalError))
-//            }
+            complete(result)
         }
         task.resume()
     }
     
-//    func getUserAuthorization(token: String) {
-//        let path = "https://www.flickr.com/services/oauth/authorize"
-//        let params = ["oauth_token" : token]
-//        makeRequest(path: path, method: "GET", params: params) { response in
-//
-//        }
-//    }
+    private func getUserAuthorization(requestTokenResponse: RequestOAuthTokenResponse) {
+        let authorizeFinalURL = "\(FlickrAPI.authorizeURL)?oauth_token=\(requestTokenResponse.oauthToken)&perms=write"
+        guard let oauthUrl = URL(string: authorizeFinalURL) else { return }
+    }
+    
+    func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebView.NavigationType) -> Bool {
+        guard let url = request.url, navigationType == .linkClicked else { return true }
+        UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        return false
+    }
+    
+    private func exchangeRequestToAccessToken(url: URL, requestTokenResponse: RequestOAuthTokenResponse) {
+        guard let parameters = url.query?.urlQueryParameters else { return }
+        /*
+         url => flickrsdk://success?oauth_token=XXXX&oauth_verifier=ZZZZ
+         url.query => oauth_token=XXXX&oauth_verifier=ZZZZ
+         url.query?.urlQueryStringParameters => ["oauth_token": "XXXX", "oauth_verifier": "YYYY"]
+         */
+        guard let verifier = parameters["oauth_verifier"] else { return }
+        
+        // Start Step 3: Request Access Token
+        let accessTokenInput = RequestAccessTokenInput(
+            consumerKey: FlickrAPI.consumerKey,
+            consumerSecret: FlickrAPI.secretKey,
+            requestToken: requestTokenResponse.oauthToken,
+            requestTokenSecret: requestTokenResponse.oauthTokenSecret,
+            oauthVerifier: verifier
+        )
+        requestAccessToken(args: accessTokenInput) { accessTokenResponse in
+            // Process Completed Successfully!
+            
+        }
+    }
+    
+    func requestAccessToken(args: RequestAccessTokenInput,
+                               _ complete: @escaping (RequestAccessTokenResponse) -> Void) {
+           let request = (url: FlickrAPI.accessTokenURL, httpMethod: "POST")
+           
+           var params: [String: Any] = [
+               "oauth_token" : args.requestToken,
+               "oauth_verifier" : args.oauthVerifier,
+               "oauth_consumer_key" : args.consumerKey,
+               "oauth_nonce" : UUID().uuidString,
+               "oauth_signature_method" : "HMAC-SHA1",
+               "oauth_timestamp" : String(Int(NSDate().timeIntervalSince1970)),
+               "oauth_version" : "1.0"
+           ]
+           
+            let oauthHelper = OauthHelper()
+        
+           // Build the OAuth Signature from Parameters
+        params["oauth_signature"] = oauthHelper.oauthSignature(httpMethod: request.httpMethod,
+                                                      url: request.url,
+                                                      params: params, consumerSecret: args.consumerSecret,
+                                                      oauthTokenSecret: args.requestTokenSecret)
+           
+           // Once OAuth Signature is included in our parameters, build the authorization header
+        let authHeader = oauthHelper.authorizationHeader(params: params)
+           
+           guard let url = URL(string: request.url) else { return }
+           var urlRequest = URLRequest(url: url)
+           urlRequest.httpMethod = request.httpMethod
+           urlRequest.setValue(authHeader, forHTTPHeaderField: "Authorization")
+           let task = sessing.dataTask(with: urlRequest) { data, response, error in
+               guard let data = data else { return }
+               guard let dataString = String(data: data, encoding: .utf8) else { return }
+               let attributes = dataString.urlQueryParameters
+               let result = RequestAccessTokenResponse(accessToken: attributes["oauth_token"] ?? "",
+                                                       accessTokenSecret: attributes["oauth_token_secret"] ?? "",
+                                                       userId: attributes["user_nsid"] ?? "",
+                                                       screenName: attributes["username"] ?? "")
+               complete(result)
+           }
+           task.resume()
+       }
+    
+    func authorize() {
+        getRequestToken() { requestTokenResponse in
+            getUserAuthorization(requestTokenResponse: requestTokenResponse)
+            requestTokenResponse.oauthToken
+        }
+    }
+    
+    // инпут на 3й запрос
+    struct RequestAccessTokenInput {
+           let consumerKey: String
+           let consumerSecret: String
+           let requestToken: String // = RequestOAuthTokenResponse.oauthToken
+           let requestTokenSecret: String // = RequestOAuthTokenResponse.oauthTokenSecret
+           let oauthVerifier: String
+    }
+    
+    // аутпут на 3й запрос
     struct RequestAccessTokenResponse {
         let accessToken: String
         let accessTokenSecret: String
@@ -180,15 +256,23 @@ class FlickrService {
         let screenName: String
     }
     
+    // аутпут на 1й запрос
     struct RequestOAuthTokenResponse {
         let oauthToken: String
         let oauthTokenSecret: String
         let oauthCallbackConfirmed: String
     }
+    
+    struct FlickrOAuthClientInput {
+           let consumerKey: String
+           let consumerSecret: String
+           let accessToken: String
+           let accessTokenSecret: String
+       }
 }
 
 extension String {
-    var urlQueryStringParameters: Dictionary<String, String> {
+    var urlQueryParameters: Dictionary<String, String> {
         // breaks apart query string into a dictionary of values
         var params = [String: String]()
         let items = self.split(separator: "&")

@@ -14,9 +14,7 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         let service = FlickrService()
-        service.getRequestToken()
+        service.authorize()
     }
-    
-    
 }
 
