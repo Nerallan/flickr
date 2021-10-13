@@ -30,6 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey  : Any] = [:]) -> Bool {
+      print("APPLICATION")
       if url.host == "oauth-callback" {
 //        OAuthSwift.handle(url: url)
         print("URL HANDLED")

@@ -15,7 +15,10 @@ struct FlickrAPI {
     static let accessTokenURL = "https://www.flickr.com/services/oauth/access_token"
     
     // keys and tokens
+
+    
     static let consumerKey = ""
     static let secretKey = ""
-    static let oauth_callback = "by.nerallan.flickr"
+//    static let oauth_callback = "myflickr://by.nerallan.flickr"
+    static let oauth_callback = "myflickr://"
 }
