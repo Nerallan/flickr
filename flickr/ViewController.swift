@@ -9,18 +9,16 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    
+    var flickrOauthService: FlickrOauthService?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-        let service = FlickrOauthService()
-        service.authorize(viewController: self) { result in
+
+        flickrOauthService?.authorize(viewController: self) { result in
             
         }
     }
-    
-    
 }
 

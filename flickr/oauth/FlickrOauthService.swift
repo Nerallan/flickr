@@ -8,11 +8,16 @@
 import Foundation;
 import SafariServices
 
+
 class FlickrOauthService {
     
-    //    private let hostURL = "https://www.flickr.com"
+    var requestTokenResponse: RequestOAuthTokenResponse = RequestOAuthTokenResponse(
+        oauthToken: "",
+        oauthTokenSecret: "",
+        oauthCallbackConfirmed: ""
+    )
     
-    private lazy var sessing: URLSession = {
+    private lazy var sessing: URLSession = { 
         let config = URLSessionConfiguration.default
         config.allowsCellularAccess = false
         return URLSession(configuration: config)
@@ -172,8 +177,15 @@ class FlickrOauthService {
         }
     }
     
-    private func exchangeRequestToAccessToken(url: URL, requestTokenResponse: RequestOAuthTokenResponse) {
-        guard let parameters = url.query?.urlQueryParameters else { return }
+    func closeSafariWebView(viewController: UIViewController) {
+//        SFSafariViewController.dismiss()
+        
+        viewController.navigationController?.popViewController(animated: true)
+        viewController.dismiss(animated: true, completion: nil)
+    }
+    
+    private func exchangeRequestToAccessToken(url: URL?, requestTokenResponse: RequestOAuthTokenResponse) {
+        guard let parameters = url?.query?.urlQueryParameters else { return }
         /*
          url => flickrsdk://success?oauth_token=XXXX&oauth_verifier=ZZZZ
          url.query => oauth_token=XXXX&oauth_verifier=ZZZZ
@@ -252,8 +264,15 @@ class FlickrOauthService {
         
         getRequestToken { requestTokenResponse in
             print(requestTokenResponse)
+            self.requestTokenResponse = requestTokenResponse
             self.getUserAuthorization(viewController: viewController, requestTokenResponse: requestTokenResponse)
         }
+    }
+    
+    func continueWithAuth(viewController: UIViewController, url: URL?){
+        closeSafariWebView(viewController: viewController)
+        exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse)
+//        print(url)
     }
     
     // input to 3d request
