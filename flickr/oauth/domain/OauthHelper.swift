@@ -10,7 +10,7 @@ import CommonCrypto
 
 class OauthHelper {
     
-    private func signatureKey(_ consumerSecret: String,_ oauthTokenSecret: String?) -> String {
+    private func signatureKey(consumerSecret: String, oauthTokenSecret: String?) -> String {
         
         guard let oauthSecret = oauthTokenSecret?.urlEncoded
         else { return consumerSecret.urlEncoded+"&" }
@@ -26,7 +26,8 @@ class OauthHelper {
             .joined(separator: "&")
     }
 
-    private func signatureBaseString(httpMethod: String = "POST", url: String,
+    // The base string is constructed by concatenating the HTTP verb, the request URL, and all request parameters sorted by name, using lexicograhpical byte value ordering, separated by an '&'.
+    private func signatureBaseString(httpMethod: String, url: String,
                                      params: [String: String]) -> String {
         
         let parameterString = signatureParameterString(params: params)
@@ -48,7 +49,7 @@ class OauthHelper {
                         consumerSecret: String,
                         oauthTokenSecret: String? = nil) -> String {
         
-        let signingKey = signatureKey(consumerSecret, oauthTokenSecret)
+        let signingKey = signatureKey(consumerSecret: consumerSecret, oauthTokenSecret: oauthTokenSecret)
         
         let signatureBase = signatureBaseString(httpMethod: httpMethod, url: url, params: params)
         
@@ -59,17 +60,11 @@ class OauthHelper {
     }
     
     func authorizationHeader(params: [String: String]) -> String {
-        var parts: [String] = []
-        for param in params {
-            let key = param.key.urlEncoded
-            let val = "\(param.value)".urlEncoded
-            parts.append(key + "=" + val)
-        }
-        
-        let header = "OAuth " + parts.sorted().joined(separator: ", ")
-        
-        return header
-    }
+        return "OAuth " + params
+            .map { $0.key.urlEncoded + "=" + $0.value.urlEncoded }
+            .sorted()
+            .joined(separator: ", ")
+     }
 }
 
 

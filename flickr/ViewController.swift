@@ -16,9 +16,14 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         
 
-        flickrOauthService?.authorize(viewController: self) { result in
-            
+        do {
+            try flickrOauthService?.authorize(viewController: self) { result in
+                
+            }
+        } catch {
+            print(error)
         }
+     
     }
 }
 

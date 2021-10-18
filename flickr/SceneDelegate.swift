@@ -10,7 +10,6 @@ import UIKit
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-//    var viewController: ViewController
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
@@ -19,7 +18,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         
         if let rootVC = scene.windows.first?.rootViewController as? ViewController {
-//            viewController = rootVC
             rootVC.flickrOauthService = FlickrOauthService()
        }
     }
@@ -53,7 +51,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        print(URLContexts.first?.url)
 //        window = UIWindow(frame: UIScreen.main.bounds)
 //
 //        let storyboard = UIStoryboard(name: "Main", bundle: nil)
@@ -62,15 +59,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 //
 //        let service = FlickrOauthService()
 //        window?.rootViewController = initialViewController
-////        window?.rootViewController.
 //        window?.makeKeyAndVisible()
-
         
         guard let scene = (scene as? UIWindowScene) else { return }
         
         if let rootVC = scene.windows.first?.rootViewController as? ViewController {
-            let someUrl = URLContexts.first?.url
-            rootVC.flickrOauthService?.continueWithAuth(viewController: rootVC, url: someUrl)
+            rootVC.flickrOauthService?.redirectFromWebView(viewController: rootVC, url: URLContexts.first?.url)
        }
     }
 }

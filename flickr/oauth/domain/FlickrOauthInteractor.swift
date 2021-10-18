@@ -119,26 +119,8 @@ class FlickrOauthService {
         task.resume()
     }
     
-    private func getRequestTokenParams(helper: OauthHelper) -> [String : String] {
-        var params = [String : String]()
-        params["oauth_nonce"] = UUID().uuidString
-        params["oauth_timestamp"] = String(Int(NSDate().timeIntervalSince1970))
-        params["oauth_consumer_key"] = FlickrAPI.consumerKey
-        params["oauth_signature_method"] = "HMAC-SHA1"
-        params["oauth_version"] = "1.0"
-        params["oauth_callback"] = FlickrAPI.oauth_callback // "myflickr://by.nerallan.flickr"
-        params["oauth_signature"] = helper.oauthSignature(
-            httpMethod: "POST",
-            url: FlickrAPI.requestTokenURL,
-            params: params,
-            consumerSecret: FlickrAPI.secretKey
-        )
-        return params
-    }
-    
-    
     private func getUserAuthorization(viewController: UIViewController, requestTokenResponse: RequestOAuthTokenResponse) {
-        let authorizeFinalURL = "\(FlickrAPI.authorizeURL)?oauth_token=\(requestTokenResponse.oauthToken)&perms=write"
+        let authorizeFinalURL = "\(FlickrOauthAPI.authorizeURL)?oauth_token=\(requestTokenResponse.oauthToken)&perms=write"
         guard let oauthUrl = URL(string: authorizeFinalURL) else { return }
         
         // PROCESS AUTHORIZATION in WebView
@@ -154,11 +136,13 @@ class FlickrOauthService {
     
     private func getRequestToken(completion: @escaping(RequestOAuthTokenResponse) -> Void) {
         let helper = OauthHelper()
-        let requestParams = getRequestTokenParams(helper: helper)
+        let mapper = FlickrOauthMapper(oauthHelper: helper)
+        let requestParams = mapper.mapToRequestTokenParams()
+//        let requestParams = getRequestTokenParams(helper: helper)
         
         // Once OAuth Signature is included in our parameters, build the authorization header
         let authHeader = helper.authorizationHeader(params: requestParams)
-        let request = makePostWithHeader(url: FlickrAPI.requestTokenURL, authHeader: authHeader)
+        let request = makePostWithHeader(url: FlickrOauthAPI.requestTokenURL, authHeader: authHeader)
         
         let task = sessing.dataTask(with: request) { data, response, error in
             guard let data = data else { return }
@@ -174,7 +158,6 @@ class FlickrOauthService {
         }
         task.resume()
     }
-    
     
     
     func redirectFromWebView(viewController: UIViewController, url: URL?){
@@ -193,8 +176,8 @@ class FlickrOauthService {
         
         // Start Step 3: Request Access Token
         let accessTokenInput = RequestAccessTokenInput(
-            consumerKey: FlickrAPI.consumerKey,
-            consumerSecret: FlickrAPI.secretKey,
+            consumerKey: FlickrOauthAPI.consumerKey,
+            consumerSecret: FlickrOauthAPI.secretKey,
             requestToken: requestTokenResponse.oauthToken,
             requestTokenSecret: requestTokenResponse.oauthTokenSecret,
             oauthVerifier: verifier
@@ -208,32 +191,17 @@ class FlickrOauthService {
     
     private func requestAccessToken(args: RequestAccessTokenInput,
                                     _ complete: @escaping (RequestAccessTokenResponse) -> Void) {
-        let request = (url: FlickrAPI.accessTokenURL, httpMethod: "POST")
         
-        var params: [String: String] = [
-            "oauth_token" : args.requestToken,
-            "oauth_verifier" : args.oauthVerifier,
-            "oauth_consumer_key" : args.consumerKey,
-            "oauth_nonce" : UUID().uuidString,
-            "oauth_signature_method" : "HMAC-SHA1",
-            "oauth_timestamp" : String(Int(NSDate().timeIntervalSince1970)),
-            "oauth_version" : "1.0"
-        ]
-        
-        let oauthHelper = OauthHelper()
-        
-        // Build the OAuth Signature from Parameters
-        params["oauth_signature"] = oauthHelper.oauthSignature(httpMethod: request.httpMethod,
-                                                               url: request.url,
-                                                               params: params, consumerSecret: args.consumerSecret,
-                                                               oauthTokenSecret: args.requestTokenSecret)
+        let helper = OauthHelper()
+        let mapper = FlickrOauthMapper(oauthHelper: helper)
+        let params = mapper.mapToAccessTokenParams(args: args, url: FlickrOauthAPI.accessTokenURL,  httpMethod: "POST")
         
         // Once OAuth Signature is included in our parameters, build the authorization header
-        let authHeader = oauthHelper.authorizationHeader(params: params)
+        let authHeader = helper.authorizationHeader(params: params)
         
-        guard let url = URL(string: request.url) else { return }
+        guard let url = URL(string: FlickrOauthAPI.accessTokenURL) else { return }
         var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = request.httpMethod
+        urlRequest.httpMethod = "POST"
         urlRequest.setValue(authHeader, forHTTPHeaderField: "Authorization")
         let task = sessing.dataTask(with: urlRequest) { data, response, error in
             guard let data = data else { return }
@@ -247,15 +215,6 @@ class FlickrOauthService {
             complete(result)
         }
         task.resume()
-    }
-    
-    // input to 3d request
-    struct RequestAccessTokenInput {
-        let consumerKey: String
-        let consumerSecret: String
-        let requestToken: String // = RequestOAuthTokenResponse.oauthToken
-        let requestTokenSecret: String // = RequestOAuthTokenResponse.oauthTokenSecret
-        let oauthVerifier: String
     }
     
     // output from 3d request
