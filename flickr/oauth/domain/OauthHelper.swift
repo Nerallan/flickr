@@ -49,13 +49,10 @@ class OauthHelper {
                         oauthTokenSecret: String? = nil) -> String {
         
         let signingKey = signatureKey(consumerSecret, oauthTokenSecret)
-        //            print("signingKey: \(signingKey)")
         
         let signatureBase = signatureBaseString(httpMethod: httpMethod, url: url, params: params)
-        //            print("signatureBase: \(signatureBase)")
         
         let signature = hmac_sha1(signingKey: signingKey, signatureBase: signatureBase)
-        //            print("signature: \(signature)")
         
         return signature
         
@@ -70,7 +67,6 @@ class OauthHelper {
         }
         
         let header = "OAuth " + parts.sorted().joined(separator: ", ")
-        //            print("authorizationHeader: \(header)")
         
         return header
     }

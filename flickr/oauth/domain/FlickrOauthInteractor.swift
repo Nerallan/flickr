@@ -8,7 +8,6 @@
 import Foundation;
 import SafariServices
 
-
 class FlickrOauthService {
     
     var requestTokenResponse: RequestOAuthTokenResponse = RequestOAuthTokenResponse(
@@ -16,6 +15,10 @@ class FlickrOauthService {
         oauthTokenSecret: "",
         oauthCallbackConfirmed: ""
     )
+    
+    private lazy var webView: SafariWebView = {
+        return SafariWebView()
+    }()
     
     private lazy var sessing: URLSession = { 
         let config = URLSessionConfiguration.default
@@ -133,6 +136,22 @@ class FlickrOauthService {
         return params
     }
     
+    
+    private func getUserAuthorization(viewController: UIViewController, requestTokenResponse: RequestOAuthTokenResponse) {
+        let authorizeFinalURL = "\(FlickrAPI.authorizeURL)?oauth_token=\(requestTokenResponse.oauthToken)&perms=write"
+        guard let oauthUrl = URL(string: authorizeFinalURL) else { return }
+        
+        // PROCESS AUTHORIZATION in WebView
+        webView.showSafariView(viewController: viewController, oauthURL: oauthUrl)
+    }
+    
+    func authorize(viewController: UIViewController, result: @escaping (Result<Void, Error>) -> Void) throws {
+        getRequestToken { requestTokenResponse in
+            self.requestTokenResponse = requestTokenResponse
+            self.getUserAuthorization(viewController: viewController, requestTokenResponse: requestTokenResponse)
+        }
+    }
+    
     private func getRequestToken(completion: @escaping(RequestOAuthTokenResponse) -> Void) {
         let helper = OauthHelper()
         let requestParams = getRequestTokenParams(helper: helper)
@@ -156,32 +175,11 @@ class FlickrOauthService {
         task.resume()
     }
     
-    private func getUserAuthorization(viewController: UIViewController, requestTokenResponse: RequestOAuthTokenResponse) {
-        let authorizeFinalURL = "\(FlickrAPI.authorizeURL)?oauth_token=\(requestTokenResponse.oauthToken)&perms=write"
-        guard let oauthUrl = URL(string: authorizeFinalURL) else { return }
-        
-        // PROCESS AUTHORIZATION in WebView
-        showSafariAuthorizationWebView(viewController: viewController, oauthURL: oauthUrl)
-        
-        return
-    }
     
-    func showSafariAuthorizationWebView(viewController: UIViewController, oauthURL: URL) {
-        let config = SFSafariViewController.Configuration()
-        config.entersReaderIfAvailable = true
-        
-        let safariViewController = SFSafariViewController(url: oauthURL, configuration: config)
-        
-        DispatchQueue.main.async {
-            viewController.present(safariViewController, animated: true)
-        }
-    }
     
-    func closeSafariWebView(viewController: UIViewController) {
-//        SFSafariViewController.dismiss()
-        
-        viewController.navigationController?.popViewController(animated: true)
-        viewController.dismiss(animated: true, completion: nil)
+    func redirectFromWebView(viewController: UIViewController, url: URL?){
+        webView.closeSafariView(viewController: viewController)
+        exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse)
     }
     
     private func exchangeRequestToAccessToken(url: URL?, requestTokenResponse: RequestOAuthTokenResponse) {
@@ -249,30 +247,6 @@ class FlickrOauthService {
             complete(result)
         }
         task.resume()
-    }
-    
-    func authorize(viewController: UIViewController, result: @escaping (Result<Void, Error>) -> Void) {
-        //        getRequestToken() { requestTokenResponse in
-        ////            getUserAuthorization(requestTokenResponse: requestTokenResponse) { url in
-        ////                exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse)
-        ////            }
-        //        }
-        
-        //        getRequestToken(completion: { (requestTokenResponse: RequestOAuthTokenResponse) in
-        //            print(requestTokenResponse)
-        //        })
-        
-        getRequestToken { requestTokenResponse in
-            print(requestTokenResponse)
-            self.requestTokenResponse = requestTokenResponse
-            self.getUserAuthorization(viewController: viewController, requestTokenResponse: requestTokenResponse)
-        }
-    }
-    
-    func continueWithAuth(viewController: UIViewController, url: URL?){
-        closeSafariWebView(viewController: viewController)
-        exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse)
-//        print(url)
     }
     
     // input to 3d request
