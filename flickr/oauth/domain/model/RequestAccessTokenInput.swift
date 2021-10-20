@@ -8,7 +8,7 @@
 import Foundation
 
 // input to 3d request
-public struct RequestAccessTokenInput {
+struct RequestAccessTokenInput {
     let consumerKey: String
     let consumerSecret: String
     let requestToken: String // = RequestOAuthTokenResponse.oauthToken

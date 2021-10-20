@@ -10,12 +10,26 @@ import SafariServices
 
 class FlickrOauthService {
     
-    var requestTokenResponse: RequestOAuthTokenResponse = RequestOAuthTokenResponse(
-        oauthToken: "",
-        oauthTokenSecret: "",
-        oauthCallbackConfirmed: ""
-    )
+    var state: State?
     
+    enum State {
+        case tokenRequested
+        case authorizeRequested((URL) -> Void)
+        case accessTokenRequested
+        case successfullyAuthentificated
+    }
+    
+    enum FlickrOauthError: Error {
+      case parsing(description: String)
+      case network(description: String)
+    }
+    
+//    var requestTokenResponse: RequestOAuthTokenResponse = RequestOAuthTokenResponse(
+//        oauthToken: "",
+//        oauthTokenSecret: "",
+//        oauthCallbackConfirmed: ""
+//    )
+
     private lazy var webView: SafariWebView = {
         return SafariWebView()
     }()
@@ -119,22 +133,29 @@ class FlickrOauthService {
         task.resume()
     }
     
-    private func getUserAuthorization(viewController: UIViewController, requestTokenResponse: RequestOAuthTokenResponse) {
-        let authorizeFinalURL = "\(FlickrOauthAPI.authorizeURL)?oauth_token=\(requestTokenResponse.oauthToken)&perms=write"
-        guard let oauthUrl = URL(string: authorizeFinalURL) else { return }
-        
-        // PROCESS AUTHORIZATION in WebView
-        webView.showSafariView(viewController: viewController, oauthURL: oauthUrl)
-    }
-    
     func authorize(viewController: UIViewController, result: @escaping (Result<Void, Error>) -> Void) throws {
-        getRequestToken { requestTokenResponse in
-            self.requestTokenResponse = requestTokenResponse
-            self.getUserAuthorization(viewController: viewController, requestTokenResponse: requestTokenResponse)
+        guard state == nil else { return }
+        
+        getRequestToken { (result) in
+            switch result {
+            case .success(let requestTokenResponse):
+                self.getUserAuthorization(viewController: viewController, requestTokenResponse: requestTokenResponse) { (result) in
+                    switch result {
+                    case .success(let url):
+                        self.exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse)
+                    case .failure(let error):
+                        break
+                    }
+                }
+            case .failure(let error):
+                break
+            }
         }
     }
     
-    private func getRequestToken(completion: @escaping(RequestOAuthTokenResponse) -> Void) {
+    
+    
+    private func getRequestToken(completion: @escaping(Result<RequestOAuthTokenResponse, Error>) -> Void) {
         let helper = OauthHelper()
         let mapper = FlickrOauthMapper(oauthHelper: helper)
         let requestParams = mapper.mapToRequestTokenParams()
@@ -145,8 +166,16 @@ class FlickrOauthService {
         let request = makePostWithHeader(url: FlickrOauthAPI.requestTokenURL, authHeader: authHeader)
         
         let task = sessing.dataTask(with: request) { data, response, error in
-            guard let data = data else { return }
-            guard let dataString = String(data: data, encoding: .utf8) else { return }
+            guard let data = data, let dataString = String(data: data, encoding: .utf8) else {
+                completion(.failure(FlickrOauthError.network(description: "network error"))) // create error enum
+                return
+            }
+            
+            // status code response 400..500 // make reusable
+            guard let response = response else {
+                completion(.failure(FlickrOauthError.network(description: "status code error")))
+                return
+            }
             
             // dataString should be as follows: oauth_token=XXXX&oauth_token_secret=YYYY&oauth_callback_confirmed=true
             let attributes = dataString.urlQueryParameters
@@ -154,15 +183,39 @@ class FlickrOauthService {
                                                    oauthTokenSecret: attributes["oauth_token_secret"] ?? "",
                                                    oauthCallbackConfirmed: attributes["oauth_callback_confirmed"] ?? "")
             
-            completion(result)
+            completion(.success(result))
         }
         task.resume()
     }
     
+    private func getUserAuthorization(viewController: UIViewController, requestTokenResponse: RequestOAuthTokenResponse, result: @escaping (Result<URL, Error>) -> Void) {
+        let authorizeFinalURL = "\(FlickrOauthAPI.authorizeURL)?oauth_token=\(requestTokenResponse.oauthToken)&perms=write"
+        guard let oauthUrl = URL(string: authorizeFinalURL) else { return }
+        
+        // PROCESS AUTHORIZATION in WebView
+        let config = SFSafariViewController.Configuration()
+        config.entersReaderIfAvailable = true
+        
+        let safariViewController = SFSafariViewController(url: oauthUrl, configuration: config)
+        
+        DispatchQueue.main.async {
+            viewController.present(safariViewController, animated: true)
+        }
+        state = .authorizeRequested({ (url) in
+            safariViewController.dismiss(animated: true, completion: nil)
+            result(.success(url))
+        })
+        
+    }
     
-    func redirectFromWebView(viewController: UIViewController, url: URL?){
-        webView.closeSafariView(viewController: viewController)
-        exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse)
+    func redirectFromWebView(url: URL){
+        // guard case let .authorizeRequested(handler) = state else { return }
+        switch state {
+        case .authorizeRequested(let handler):
+            handler(url)
+        default:
+            break
+        }
     }
     
     private func exchangeRequestToAccessToken(url: URL?, requestTokenResponse: RequestOAuthTokenResponse) {
@@ -206,7 +259,10 @@ class FlickrOauthService {
         let task = sessing.dataTask(with: urlRequest) { data, response, error in
             guard let data = data else { return }
             guard let dataString = String(data: data, encoding: .utf8) else { return }
+            print("DATASTRING")
+            print(dataString)
             let attributes = dataString.urlQueryParameters
+            print(attributes)
             let result = RequestAccessTokenResponse(accessToken: attributes["oauth_token"] ?? "",
                                                     accessTokenSecret: attributes["oauth_token_secret"] ?? "",
                                                     userId: attributes["user_nsid"] ?? "",
@@ -244,16 +300,16 @@ class FlickrOauthService {
 extension String {
     var urlQueryParameters: Dictionary<String, String> {
         // breaks apart query string into a dictionary of values
-        var params = [String: String]()
-        let items = self.split(separator: "&")
-        for item in items {
-            let combo = item.split(separator: "=")
-            if combo.count == 2 {
-                let key = "\(combo[0])"
-                let val = "\(combo[1])"
+         var params = [String: String]()
+         self
+            .split(separator: "&")
+            .map { $0.split(separator: "=") }
+            .filter{ $0.count == 2 }
+            .forEach {
+                let key = "\($0[0])"
+                let val = "\($0[1])"
                 params[key] = val
-            }
-        }
+             }
         return params
     }
 }

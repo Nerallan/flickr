@@ -11,7 +11,7 @@
 		CE17E90D270AE4130005E810 /* FlickrOauthApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE17E90C270AE4130005E810 /* FlickrOauthApi.swift */; };
 		CE17E91C270B49110005E810 /* OauthHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE17E91B270B49110005E810 /* OauthHelper.swift */; };
 		CE17E92F270B505A0005E810 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE17E92E270B505A0005E810 /* ExternalAccessory.framework */; };
-		CE341E4A2705E6F20058624D /* FlickrOauthInteractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE341E492705E6F20058624D /* FlickrOauthInteractor.swift */; };
+		CE341E4A2705E6F20058624D /* FlickrOauthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE341E492705E6F20058624D /* FlickrOauthService.swift */; };
 		CE8B2E2E2716EAC900666498 /* EndpointApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8B2E2D2716EAC900666498 /* EndpointApi.swift */; };
 		CEBC9A032719A420001DD73A /* SafariWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBC9A022719A420001DD73A /* SafariWebView.swift */; };
 		CEBC9A082719AE19001DD73A /* FlickrOauthMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBC9A072719AE19001DD73A /* FlickrOauthMapper.swift */; };
@@ -49,7 +49,7 @@
 		CE17E92C270B505A0005E810 /* flickrRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = flickrRelease.entitlements; sourceTree = "<group>"; };
 		CE17E92E270B505A0005E810 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		CE17E933270B50620005E810 /* flickr.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = flickr.entitlements; sourceTree = "<group>"; };
-		CE341E492705E6F20058624D /* FlickrOauthInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickrOauthInteractor.swift; sourceTree = "<group>"; };
+		CE341E492705E6F20058624D /* FlickrOauthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickrOauthService.swift; sourceTree = "<group>"; };
 		CE8B2E2D2716EAC900666498 /* EndpointApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EndpointApi.swift; sourceTree = "<group>"; };
 		CEBC9A022719A420001DD73A /* SafariWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebView.swift; sourceTree = "<group>"; };
 		CEBC9A072719AE19001DD73A /* FlickrOauthMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickrOauthMapper.swift; sourceTree = "<group>"; };
@@ -143,7 +143,7 @@
 				CE11356D271C4A29000B8812 /* model */,
 				CEBC9A0C2719AE47001DD73A /* mapper */,
 				CE17E91B270B49110005E810 /* OauthHelper.swift */,
-				CE341E492705E6F20058624D /* FlickrOauthInteractor.swift */,
+				CE341E492705E6F20058624D /* FlickrOauthService.swift */,
 			);
 			path = domain;
 			sourceTree = "<group>";
@@ -356,7 +356,7 @@
 				CEE0441D27058D57007A0D1F /* ViewController.swift in Sources */,
 				CEE0441927058D57007A0D1F /* AppDelegate.swift in Sources */,
 				CEBC9A082719AE19001DD73A /* FlickrOauthMapper.swift in Sources */,
-				CE341E4A2705E6F20058624D /* FlickrOauthInteractor.swift in Sources */,
+				CE341E4A2705E6F20058624D /* FlickrOauthService.swift in Sources */,
 				CE17E91C270B49110005E810 /* OauthHelper.swift in Sources */,
 				CEBC9A032719A420001DD73A /* SafariWebView.swift in Sources */,
 				CEE0441B27058D57007A0D1F /* SceneDelegate.swift in Sources */,

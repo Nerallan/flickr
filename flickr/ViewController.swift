@@ -16,6 +16,8 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         
 
+        
+        // make swift case
         do {
             try flickrOauthService?.authorize(viewController: self) { result in
                 
@@ -23,7 +25,9 @@ class ViewController: UIViewController {
         } catch {
             print(error)
         }
-     
+        
+        
+        
     }
 }
 
