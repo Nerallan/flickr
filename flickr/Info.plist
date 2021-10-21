@@ -19,21 +19,31 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleIdentifier</key>
+			<string></string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>by.nerallan.flickr</string>
+			<string></string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>by.nerallan.flickr</string>
+				<string>myflickr</string>
 			</array>
 		</dict>
-		<dict/>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -80,10 +90,5 @@
 	<array>
 		<dict/>
 	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-    		<key>NSAllowsArbitraryLoads</key>
-    	<true/>
-	</dict>
 </dict>
 </plist>
