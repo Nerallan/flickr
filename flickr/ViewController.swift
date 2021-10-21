@@ -15,19 +15,16 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-
-        
-        // make swift case
-        do {
-            try flickrOauthService?.authorize(viewController: self) { result in
-                
+        flickrOauthService?.authorize(viewController: self) { result in
+            switch result {
+            case .success(let accessToken):
+                print("AUTHORIZED")
+                print(accessToken)
+            case .failure(let error):
+                print("ERROR")
+                print(error)
             }
-        } catch {
-            print(error)
         }
-        
-        
-        
     }
 }
 
