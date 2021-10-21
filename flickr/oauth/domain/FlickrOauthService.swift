@@ -24,81 +24,15 @@ class FlickrOauthService {
         case network(description: String)
     }
 
-    private lazy var webView: SafariWebView = {
-        return SafariWebView()
-    }()
-    
+//    private lazy var webView:  = {
+//        return SafariWebView()
+//    }()
+//    
     private lazy var sessing: URLSession = {
         let config = URLSessionConfiguration.default
         config.allowsCellularAccess = false
         return URLSession(configuration: config)
     }()
-    
-    //    func createRequest(absoluteURL: String, data: Data, method: String = "GET") -> URLRequest {
-    //        var request = URLRequest(url: URL(string: absoluteURL)!)
-    //        request.httpMethod = method
-    //        request.httpBody = data
-    //        return request
-    //    }
-    
-    //    func makeRequest(path: String, method: String, params: [String: Any], completion: @escaping (Result<Data, Error>) -> Void) {
-    //
-    //        let finalURL = hostURL + path
-    //        var request = URLRequest(url: URL(string: finalURL)!)
-    //        request.httpMethod = method
-    //        request.httpBody = params
-    //        let request: URLRequest
-    //        do {
-    //            let data = try JSONSerialization.data(withJSONObject: params)
-    //
-    //            request = createRequest(absoluteURL: finalURL, data: data, method: method)
-    //        } catch {
-    //            return
-    //        }
-    //
-    //        let task = sessing.dataTask(with: request) { data, response, error in
-    //            if let data = data {
-    //                completion(.success(data))
-    //            } else if let error = error {
-    //                completion(.failure(error))
-    //            } else {
-    ////                completion(.failure(ServerError.internalError))
-    //            }
-    //        }
-    //
-    //        task.resume()
-    //    }
-    
-    
-    //    private func makeGet(path: String, params: [String: String?]) -> URLRequest{
-    //        let finalStringURL = hostURL + path
-    ////        let url = URL(string: finalStringURL)!
-    //        if var components = URLComponents(string: finalStringURL) {
-    //            var localVariable = components
-    //            components.queryItems = params.map { (key, value) in
-    //                URLQueryItem(name: key, value: value)
-    //            }
-    //
-    //            components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
-    //            var request = URLRequest(url: (components.url!)!)
-    //            request.httpMethod = "GET"
-    //            return request
-    //        }
-    //    }
-    
-    //    private func makePost(path: String, rawData: Any) -> URLRequest {
-    //        let finalStringURL = hostURL + path
-    //        var data: Data
-    //        do {
-    //            data = try JSONSerialization.data(withJSONObject: rawData)
-    //        } catch {
-    //            data = Data()
-    //        }
-    //        var request = URLRequest(url: URL(string: finalStringURL)!)
-    //        request.httpMethod = "POST"
-    //        request.httpBody = data
-    //        return request
-    //    }
     
     private func makePostWithHeader(url: String, authHeader: String) -> URLRequest {
         var request = URLRequest(url: URL(string: url)!)
@@ -106,7 +40,6 @@ class FlickrOauthService {
         request.setValue(authHeader, forHTTPHeaderField: "Authorization")
         return request
     }
-    
     
     private func makeRequest(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) {
         let task = sessing.dataTask(with: request) { data, response, error in
@@ -136,14 +69,7 @@ class FlickrOauthService {
                 self.getUserAuthorization(viewController: viewController, requestTokenResponse: requestTokenResponse) { result in
                     switch result {
                     case .success(let url):
-                        self.exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse) { result in
-                            switch result {
-                            case .success(let tokenResponse):
-                                completion(.success(tokenResponse))
-                            case .failure(let error):
-                                completion(.failure(error))
-                            }
-                        }
+                        self.exchangeRequestToAccessToken(url: url, requestTokenResponse: requestTokenResponse, completion: completion)
                     case .failure(let error):
                         completion(.failure(error))
                         break
@@ -167,13 +93,13 @@ class FlickrOauthService {
         
         let task = sessing.dataTask(with: request) { data, response, error in
             
-            self.handleNetworkCornerCasesResponse(data: data, response: response, error: error) { result in
-                switch result {
-                case .failure(let errorString):
-                    completion(.failure(errorString))
-                case .success(_):
-                    break
-                }
+            let result = self.handleNetworkCornerCasesResponse(data: data, response: response, error: error)
+            
+            switch result {
+            case .failure(let errorString):
+                completion(.failure(errorString))
+            case .success(_):
+                break
             }
             
             if let data = data, let dataString = String(data: data, encoding: .utf8) {
@@ -189,32 +115,30 @@ class FlickrOauthService {
         task.resume()
     }
     
-    private func handleNetworkCornerCasesResponse(data: Data?, response: URLResponse?, error: Error?, completion: @escaping(Result<Data, Error>) -> Void) {
-        
+    private func handleNetworkCornerCasesResponse(data: Data?, response: URLResponse?, error: Error? ) -> Result<Data, Error>  {
         
         if let error = error {
-            completion(.failure(error))
-            return
+            return  .failure(error)
         }
         
         guard let data = data, let response = response as? HTTPURLResponse else {
-            completion(.failure(FlickrOauthError.network(description: "network error")))
-            return
+            return .failure(FlickrOauthError.network(description: "network error"))
         }
         
         switch response.statusCode {
         case 500...599:
-            completion(.failure(FlickrOauthError.network(description: "server status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")")))
+            return .failure(FlickrOauthError.network(description: "server status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")"))
         case 400...499:
-            completion(.failure(FlickrOauthError.network(description: "client status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")")))
+            return .failure(FlickrOauthError.network(description: "client status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")"))
         default:
             break
         }
+//        
+//        guard String(data: data, encoding: .utf8) != nil else {
+//            return .failure(FlickrOauthError.parsing(description: "No UTF-8 response data"))
+//        }
         
-        guard String(data: data, encoding: .utf8) != nil else {
-            completion(.failure(FlickrOauthError.parsing(description: "No UTF-8 response data")))
-            return
-        }
+        return .success(Data())
     }
     
     private func getUserAuthorization(viewController: UIViewController, requestTokenResponse: RequestOAuthTokenResponse, result: @escaping (Result<URL, Error>) -> Void) {
@@ -283,13 +207,13 @@ class FlickrOauthService {
         
         let task = sessing.dataTask(with: urlRequest) { data, response, error in
             
-            self.handleNetworkCornerCasesResponse(data: data, response: response, error: error) { result in
-                switch result {
-                case .failure(let errorString):
-                    completion(.failure(errorString))
-                case .success(_):
-                    break
-                }
+            let result = self.handleNetworkCornerCasesResponse(data: data, response: response, error: error)
+            
+            switch result {
+            case .failure(let errorString):
+                completion(.failure(errorString))
+            case .success(_):
+                break
             }
             
             if let data = data, let dataString = String(data: data, encoding: .utf8) {

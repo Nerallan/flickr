@@ -8,6 +8,8 @@
 import Foundation
 
 enum EndpointApi: String  {
+    static let baseURLString = "https://api.flickr.com/services/rest"
+    
     case getProfile = "flickr.profile.getProfile"
     case getHotList = "flickr.tags.getHotList"
     case getRecent = "flickr.photos.getRecent"
