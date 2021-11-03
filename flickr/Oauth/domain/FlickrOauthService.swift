@@ -37,23 +37,6 @@ class FlickrOauthService {
         return request
     }
     
-    private func makeRequest(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) {
-        let task = sessing.dataTask(with: request) { data, response, error in
-            if let data = data {
-                print("DATA")
-                print(data)
-                completion(.success(data))
-                print("RESPONCE")
-                print(response!)
-            } else if let error = error {
-                completion(.failure(error))
-            } else {
-                //                completion(.failure(ServerError.internalError))
-            }
-        }
-        task.resume()
-    }
-    
     func authorize(viewController: UIViewController, completion: @escaping (Result<RequestAccessTokenResponse, Error>) -> Void) {
         guard state == nil else { return }
         
@@ -230,30 +213,5 @@ extension String {
                 params[key] = val
             }
         return params
-    }
-}
-
-extension URLSession {
-    func resultDataTask(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) -> URLSessionDataTask {
-        dataTask(with: request) { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            
-            guard let data = data, let response = response as? HTTPURLResponse else {
-                completion(.failure(FlickrOauthError.network(description: "network error")))
-                return
-            }
-            
-            switch response.statusCode {
-            case 500...599:
-                completion(.failure(FlickrOauthError.network(description: "server status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")")))
-            case 400...499:
-                completion(.failure(FlickrOauthError.network(description: "client status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")")))
-            default:
-                completion(.success(data))
-            }
-        }
     }
 }
