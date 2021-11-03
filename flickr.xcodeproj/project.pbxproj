@@ -115,13 +115,13 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		CE8B2E322716EE7000666498 /* oauth */ = {
+		CE8B2E322716EE7000666498 /* Oauth */ = {
 			isa = PBXGroup;
 			children = (
 				CEBC9A0D2719AE61001DD73A /* data */,
 				CEBC9A0E2719AE9B001DD73A /* domain */,
 			);
-			path = oauth;
+			path = Oauth;
 			sourceTree = "<group>";
 		};
 		CEBC9A0C2719AE47001DD73A /* mapper */ = {
@@ -183,8 +183,8 @@
 		CEE0441727058D57007A0D1F /* flickr */ = {
 			isa = PBXGroup;
 			children = (
-				CEE2ACE7272198AF009969E7 /* core_network */,
-				CE8B2E322716EE7000666498 /* oauth */,
+				CEE2ACE7272198AF009969E7 /* Core Network */,
+				CE8B2E322716EE7000666498 /* Oauth */,
 				CE17E933270B50620005E810 /* flickr.entitlements */,
 				CE17E92C270B505A0005E810 /* flickrRelease.entitlements */,
 				CEE0441827058D57007A0D1F /* AppDelegate.swift */,
@@ -216,47 +216,47 @@
 			path = flickrUITests;
 			sourceTree = "<group>";
 		};
-		CEE2ACE7272198AF009969E7 /* core_network */ = {
+		CEE2ACE7272198AF009969E7 /* Core Network */ = {
 			isa = PBXGroup;
 			children = (
-				CEE2AD0B2721A9C2009969E7 /* request */,
-				CEE2ACF52721A388009969E7 /* response */,
-				CEE2ACEC2721996F009969E7 /* service */,
-				CEE2ACEB2721990C009969E7 /* api */,
+				CEE2AD0B2721A9C2009969E7 /* Request */,
+				CEE2ACF52721A388009969E7 /* Response */,
+				CEE2ACEC2721996F009969E7 /* Service */,
+				CEE2ACEB2721990C009969E7 /* Api */,
 			);
-			path = core_network;
+			path = "Core Network";
 			sourceTree = "<group>";
 		};
-		CEE2ACEB2721990C009969E7 /* api */ = {
+		CEE2ACEB2721990C009969E7 /* Api */ = {
 			isa = PBXGroup;
 			children = (
 				CE8B2E2D2716EAC900666498 /* EndpointApi.swift */,
 			);
-			path = api;
+			path = Api;
 			sourceTree = "<group>";
 		};
-		CEE2ACEC2721996F009969E7 /* service */ = {
+		CEE2ACEC2721996F009969E7 /* Service */ = {
 			isa = PBXGroup;
 			children = (
 				CEE2ACED27219987009969E7 /* FlickrService.swift */,
 			);
-			path = service;
+			path = Service;
 			sourceTree = "<group>";
 		};
-		CEE2ACF52721A388009969E7 /* response */ = {
+		CEE2ACF52721A388009969E7 /* Response */ = {
 			isa = PBXGroup;
 			children = (
 				CEE2ACF62721A3A3009969E7 /* FlickrPhotosInfoResponse.swift */,
 				CEE2ACFE2721A3EB009969E7 /* FlickrPhotosResponse.swift */,
 			);
-			path = response;
+			path = Response;
 			sourceTree = "<group>";
 		};
-		CEE2AD0B2721A9C2009969E7 /* request */ = {
+		CEE2AD0B2721A9C2009969E7 /* Request */ = {
 			isa = PBXGroup;
 			children = (
 			);
-			path = request;
+			path = Request;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -8,6 +8,11 @@
 import Foundation;
 import SafariServices
 
+enum FlickrOauthError: Error {
+    case parsing(description: String)
+    case network(description: String)
+}
+
 class FlickrOauthService {
     
     var state: State?
@@ -18,16 +23,7 @@ class FlickrOauthService {
         case accessTokenRequested
         case successfullyAuthentificated
     }
-    
-    enum FlickrOauthError: Error {
-        case parsing(description: String)
-        case network(description: String)
-    }
 
-//    private lazy var webView:  = {
-//        return SafariWebView()
-//    }()
-//    
     private lazy var sessing: URLSession = {
         let config = URLSessionConfiguration.default
         config.allowsCellularAccess = false
@@ -50,13 +46,11 @@ class FlickrOauthService {
                 print("RESPONCE")
                 print(response!)
             } else if let error = error {
-                
                 completion(.failure(error))
             } else {
                 //                completion(.failure(ServerError.internalError))
             }
         }
-        
         task.resume()
     }
     
@@ -91,54 +85,25 @@ class FlickrOauthService {
         let authHeader = helper.authorizationHeader(params: requestParams)
         let request = makePostWithHeader(url: FlickrOauthAPI.requestTokenURL, authHeader: authHeader)
         
-        let task = sessing.dataTask(with: request) { data, response, error in
-            
-            let result = self.handleNetworkCornerCasesResponse(data: data, response: response, error: error)
-            
-            switch result {
-            case .failure(let errorString):
-                completion(.failure(errorString))
-            case .success(_):
-                break
-            }
-            
-            if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                // dataString should be as follows: oauth_token=XXXX&oauth_token_secret=YYYY&oauth_callback_confirmed=true
-                let attributes = dataString.urlQueryParameters
-                let result = RequestOAuthTokenResponse(oauthToken: attributes["oauth_token"] ?? "",
-                                                       oauthTokenSecret: attributes["oauth_token_secret"] ?? "",
-                                                       oauthCallbackConfirmed: attributes["oauth_callback_confirmed"] ?? "")
+        let task = sessing.resultDataTask(request: request) { result  in
+        
+            let requestOAuthTokenResponseResult = result.flatMap { data -> Result<RequestOAuthTokenResponse, Error> in
                 
-                completion(.success(result))
+                guard let dataString = String(data: data, encoding: .utf8) else {
+                    return .failure(FlickrOauthError.parsing(description: "error parsing"))
+                }
+                
+                let attributes = dataString.urlQueryParameters
+                
+                return .success(.init(
+                    oauthToken: attributes["oauth_token"] ?? "",
+                    oauthTokenSecret: attributes["oauth_token_secret"] ?? "",
+                    oauthCallbackConfirmed:  attributes["oauth_callback_confirmed"] ?? ""
+                ))
             }
+            completion(requestOAuthTokenResponseResult)
         }
         task.resume()
-    }
-    
-    private func handleNetworkCornerCasesResponse(data: Data?, response: URLResponse?, error: Error? ) -> Result<Data, Error>  {
-        
-        if let error = error {
-            return  .failure(error)
-        }
-        
-        guard let data = data, let response = response as? HTTPURLResponse else {
-            return .failure(FlickrOauthError.network(description: "network error"))
-        }
-        
-        switch response.statusCode {
-        case 500...599:
-            return .failure(FlickrOauthError.network(description: "server status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")"))
-        case 400...499:
-            return .failure(FlickrOauthError.network(description: "client status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")"))
-        default:
-            break
-        }
-//        
-//        guard String(data: data, encoding: .utf8) != nil else {
-//            return .failure(FlickrOauthError.parsing(description: "No UTF-8 response data"))
-//        }
-        
-        return .success(Data())
     }
     
     private func getUserAuthorization(viewController: UIViewController, requestTokenResponse: RequestOAuthTokenResponse, result: @escaping (Result<URL, Error>) -> Void) {
@@ -158,7 +123,7 @@ class FlickrOauthService {
             safariViewController.dismiss(animated: true, completion: nil)
             result(.success(url))
         })
-        
+
     }
     
     func redirectFromWebView(url: URL){
@@ -205,28 +170,24 @@ class FlickrOauthService {
         let authHeader = helper.authorizationHeader(params: params)
         let urlRequest = makePostWithHeader(url: FlickrOauthAPI.accessTokenURL, authHeader: authHeader)
         
-        let task = sessing.dataTask(with: urlRequest) { data, response, error in
-            
-            let result = self.handleNetworkCornerCasesResponse(data: data, response: response, error: error)
-            
-            switch result {
-            case .failure(let errorString):
-                completion(.failure(errorString))
-            case .success(_):
-                break
-            }
-            
-            if let data = data, let dataString = String(data: data, encoding: .utf8) {
-
+        let task = sessing.resultDataTask(request: urlRequest) { result  in
+            let requestAccessTokenResponse = result.flatMap { data -> Result<RequestAccessTokenResponse, Error> in
+                
+                guard let dataString = String(data: data, encoding: .utf8) else {
+                    return .failure(FlickrOauthError.parsing(description: "error parsing"))
+                }
+                
                 let attributes = dataString.urlQueryParameters
-                let result = RequestAccessTokenResponse(accessToken: attributes["oauth_token"] ?? "",
-                                                        accessTokenSecret: attributes["oauth_token_secret"] ?? "",
-                                                        userId: attributes["user_nsid"] ?? "",
-                                                        username: attributes["username"] ?? "",
-                                                        fullName: attributes["fullname"] ?? "")
-                completion(.success(result))
+       
+                return .success(.init(accessToken: attributes["oauth_token"] ?? "",
+                                      accessTokenSecret: attributes["oauth_token_secret"] ?? "",
+                                      userId: attributes["user_nsid"] ?? "",
+                                      username: attributes["username"] ?? "",
+                                      fullName: attributes["fullname"] ?? ""))
+            
             }
-           
+            
+            completion(requestAccessTokenResponse)
         }
         task.resume()
     }
@@ -269,5 +230,30 @@ extension String {
                 params[key] = val
             }
         return params
+    }
+}
+
+extension URLSession {
+    func resultDataTask(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) -> URLSessionDataTask {
+        dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data, let response = response as? HTTPURLResponse else {
+                completion(.failure(FlickrOauthError.network(description: "network error")))
+                return
+            }
+            
+            switch response.statusCode {
+            case 500...599:
+                completion(.failure(FlickrOauthError.network(description: "server status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")")))
+            case 400...499:
+                completion(.failure(FlickrOauthError.network(description: "client status code error \(String(data: data, encoding: .utf8) ?? "No UTF-8 response data")")))
+            default:
+                completion(.success(data))
+            }
+        }
     }
 }
